@@ -4,6 +4,12 @@ import re
 import requests
 import sys
 import websocket
+
+#added by wari
+import os
+import signal
+import time
+
 from datetime import datetime
 
 def record_twitcasting(user, proxy='', user_agent='', filename=''):
@@ -47,6 +53,10 @@ def record_twitcasting(user, proxy='', user_agent='', filename=''):
             print("Closing file stream...")
             output_fd.close()
 
+            if os.stat(filename).st_size == 0:
+                print(f"Empty file. Removing {filename}...")
+                os.remove(filename)
+
         except Exception as err:
             print('Failed to connect to WebSocket server', err)
         finally:
@@ -60,18 +70,33 @@ def record_twitcasting(user, proxy='', user_agent='', filename=''):
 
 def _get_stream_info(user, proxy='', user_agent=''):
     url = f'https://twitcasting.tv/streamserver.php?target={user}&mode=client'
-    r = requests.get(url, proxies={ 'http': proxy, 'https': proxy }, headers={ 'User-Agent': user_agent })
-    data = r.json()
+    try:
+        r = requests.get(url, proxies={ 'http': proxy, 'https': proxy }, headers={ 'User-Agent': user_agent })
+    except requests.ConnectionError:
+        print(f'Connection Error, skipping')
+        data = " "
+    else:
+        if r.status_code == 200:
+           data = r.json()
+        else:
+           print(f'Error {r.status_code}')
+           data = " "
     return data
 
 
 def check_live_status(user, proxy='', user_agent=''):
     data = _get_stream_info(user, proxy, user_agent)
-    return data['movie']['live']
+    if data == " ":
+        return " "
+    else:
+        return data['movie']['live']
 
 
 def get_stream_url(user, proxy='', user_agent=''):
     data = _get_stream_info(user, proxy, user_agent)
+    if data == " ":
+       print(f'Seems to be network error from _get_stream_info, skipping this loop...')
+       return
 
     # Check live stream
     if not data['movie']['live']:
@@ -128,8 +153,13 @@ def parse_proxy_host_port(proxy_str):
 
     return host, port
 
+def signal_handler(sig, frame):
+    print('Ctrl-C detected. Exiting.')
+    sys.exit(0)
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGINT, signal_handler)
+
     parser = argparse.ArgumentParser(description='TwitCasting live stream recorder.')
 
     parser.add_argument('--proxy', help='Request with HTTP proxy. e.g. http://127.0.0.1:1080')
@@ -139,4 +169,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     print("Args:", args)
-    record_twitcasting(args.user_id, proxy=args.proxy, user_agent=args.user_agent, filename=args.filename)
+    while True:
+        record_twitcasting(args.user_id, proxy=args.proxy, user_agent=args.user_agent, filename=args.filename)
+        print('Sleeping for 10 seconds.')
+        time.sleep(10)
