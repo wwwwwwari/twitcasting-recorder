@@ -1,6 +1,12 @@
-# TwitCasting Recorder [WIP]
+# TwitCasting Recorder with a Loop [WIP]
 
 Just another Python implementation of [TwitCasting](https://twitcasting.tv/) live stream recorder.
+This fork adds the following:
+* A loop so the script monitors the stream indefinitely 
+* Check and remove empty recording files so your server isn't full of it
+* Sleep for 10 seconds every loop so we don't spam Twitcasting with our requests
+
+Disclaimer: I don't really know how git works or how to make a good code so use it at your own risk. It might make your cat sleep a few more hours a day and wake you up at 3:42am instead of the usual 5am.
 
 ## Usage
 
@@ -36,7 +42,8 @@ ffmpeg -i xxx.ts -codec copy xxx.mp4
 
 - [himananiito/livedl](https://github.com/himananiito/livedl)
 - [nekoteaparty/Alice-LiveMan](https://github.com/nekoteaparty/Alice-LiveMan)
+- [printempw/twitcasting-recorder](https://github.com/printempw/twitcasting-recorder)
 
 ## License
 
-MIT License (c) 2019 printempw
+MIT License (c) 2021 wwwwwwari
