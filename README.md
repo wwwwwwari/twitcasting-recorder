@@ -1,12 +1,13 @@
 # TwitCasting Recorder with a Loop [WIP]
 
-Just another Python implementation of [TwitCasting](https://twitcasting.tv/) live stream recorder.
 This fork adds the following:
 * A loop so the script monitors the stream indefinitely 
 * Check and remove empty recording files so your server isn't full of it
 * Sleep for 10 seconds every loop so we don't spam Twitcasting with our requests
+* An option "--trace true" to enable network trace
+* An option "--dotarmy true" to print out an army of dots while recording so you know if the process is frozen or something? I don't know it's a feature by the original author but it kinda prints too much dots if you ask me. 
 
-Disclaimer: I don't really know how git works or how to make a good code so use it at your own risk. It might make your cat sleep a few more hours a day and wake you up at 3:42am instead of the usual 5am.
+Disclaimer: I don't know how to code properly. 
 
 ## Usage
 

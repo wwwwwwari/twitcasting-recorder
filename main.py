@@ -12,22 +12,21 @@ import time
 
 from datetime import datetime
 
-def record_twitcasting(user, proxy='', user_agent='', filename=''):
+def record_twitcasting(user, proxy='', user_agent='', filename='',enable_trace='',dotarmy=''):
     try:
         stream_url = get_stream_url(user, proxy=proxy, user_agent=user_agent)
         print(stream_url)
-
         try:
             # Default filename
             filename = filename if filename else datetime.now().strftime('record_' + user + '_%Y%m%d_%H%M%S.ts')
 
             output_fd = open(filename, 'wb')
             print(f'Writing stream to {filename}')
-
             def on_message(ws, data):
                 try:
                     output_fd.write(data)
-                    sys.stderr.write('.')
+                    if (dotarmy == "true"):
+                        sys.stderr.write('.')
                     sys.stderr.flush()
                 except IOError as err:
                     print(f'Error when writing to output: {err}, exiting')
@@ -39,7 +38,8 @@ def record_twitcasting(user, proxy='', user_agent='', filename=''):
             def on_close(ws):
                 print('Disconnected from WebSocket server')
 
-            ws = prepare_websocket(stream_url,
+            
+            ws = prepare_websocket(enable_trace,stream_url,
                 header={ 'Origin': f'https://twitcasting.tv/{user}', 'User-Agent': user_agent },
                 on_message=on_message,
                 on_error=on_error,
@@ -52,7 +52,6 @@ def record_twitcasting(user, proxy='', user_agent='', filename=''):
             # Disconnected
             print("Closing file stream...")
             output_fd.close()
-
             if os.stat(filename).st_size == 0:
                 print(f"Empty file. Removing {filename}...")
                 os.remove(filename)
@@ -131,8 +130,10 @@ def get_stream_url(user, proxy='', user_agent=''):
     return stream_url
 
 
-def prepare_websocket(url, **kwargs):
-    websocket.enableTrace(True)
+def prepare_websocket(enable_trace,url, **kwargs):
+    if (enable_trace == "true"):
+        websocket.enableTrace(True)
+    
     ws = websocket.WebSocketApp(url, **kwargs)
     return ws
 
@@ -166,10 +167,12 @@ if __name__ == '__main__':
     parser.add_argument('--user-agent', help='Request with custom User Agent.', default='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0')
     parser.add_argument('-o', '--output', dest='filename', help='File name to save recorded video.')
     parser.add_argument('user_id', help='The user id to record. i.e. the string after "https://twitcasting.tv/" in URL')
+    parser.add_argument('--trace', help='Enable network trace if set to "true" without quotes')
+    parser.add_argument('--dotarmy', help='Print an army of dots(.) while recording if set to "true" without quotes')
 
     args = parser.parse_args()
     print("Args:", args)
     while True:
-        record_twitcasting(args.user_id, proxy=args.proxy, user_agent=args.user_agent, filename=args.filename)
+        record_twitcasting(args.user_id, proxy=args.proxy, user_agent=args.user_agent, filename=args.filename, enable_trace=args.trace, dotarmy=args.dotarmy)
         print('Sleeping for 10 seconds.')
         time.sleep(10)
